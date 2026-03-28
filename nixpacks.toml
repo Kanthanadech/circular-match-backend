@@ -2,4 +2,4 @@
 cmds = ["npm ci --ignore-scripts", "npx prisma generate"]
 
 [start]
-cmd = "sh start.sh"
+cmd = "npm start"
