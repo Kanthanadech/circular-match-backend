@@ -1,0 +1,1 @@
+{"version":3,"file":"carbon.d.ts","sourceRoot":"","sources":["../../src/utils/carbon.ts"],"names":[],"mappings":"AAIA,eAAO,MAAM,gBAAgB,EAAE,MAAM,CAAC,MAAM,EAAE,MAAM,CAQnD,CAAC;AAKF;;;;;;;GAOG;AACH,wBAAgB,oBAAoB,CAClC,QAAQ,EAAE,MAAM,EAChB,QAAQ,EAAE,MAAM,EAChB,UAAU,EAAE,MAAM,GACjB,MAAM,CAMR;AAED;;;GAGG;AACH,wBAAgB,mBAAmB,CAAC,QAAQ,EAAE,MAAM,GAAG,MAAM,CAE5D"}
