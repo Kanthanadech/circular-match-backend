@@ -1,0 +1,108 @@
+// prisma/schema.prisma
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  companyName  String   @map("company_name")
+  role         UserRole @default(GENERATOR)
+  addressText  String?  @map("address_text")
+  lat          Float?
+  lng          Float?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  wastes         Waste[] @relation("GeneratorWastes")
+  matchesReceived Match[] @relation("ReceiverMatches")
+
+  @@map("users")
+}
+
+enum UserRole {
+  GENERATOR
+  RECEIVER
+  ADMIN
+}
+
+// ─────────────────────────────────────────
+// WASTES
+// ─────────────────────────────────────────
+model Waste {
+  id                  String      @id @default(uuid())
+  generatorId         String      @map("generator_id")
+  title               String
+  description         String?
+  category            WasteCategory
+  weightKg            Float       @map("weight_kg")
+  imageUrl            String?     @map("image_url")
+  pickupInstructions  String?     @map("pickup_instructions")
+  status              WasteStatus @default(AVAILABLE)
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  generator User    @relation("GeneratorWastes", fields: [generatorId], references: [id], onDelete: Cascade)
+  match     Match?
+
+  @@map("wastes")
+}
+
+enum WasteCategory {
+  ORGANIC
+  WOOD
+  OIL
+  PLASTIC
+  PAPER
+  METAL
+  OTHER
+}
+
+enum WasteStatus {
+  AVAILABLE
+  MATCHED
+  COLLECTED
+  EXPIRED
+}
+
+// ─────────────────────────────────────────
+// MATCHES
+// ─────────────────────────────────────────
+model Match {
+  id                String      @id @default(uuid())
+  wasteId           String      @unique @map("waste_id")
+  receiverId        String      @map("receiver_id")
+  actualDistanceKm  Float?      @map("actual_distance_km")
+  drivingTimeMins   Int?        @map("driving_time_mins")
+  carbonSavedKg     Float       @default(0) @map("carbon_saved_kg")
+  matchStatus       MatchStatus @default(PENDING_APPROVAL) @map("match_status")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  waste    Waste @relation(fields: [wasteId], references: [id], onDelete: Cascade)
+  receiver User  @relation("ReceiverMatches", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("matches")
+}
+
+enum MatchStatus {
+  PENDING_APPROVAL
+  ACCEPTED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
