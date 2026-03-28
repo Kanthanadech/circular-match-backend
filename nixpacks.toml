@@ -1,5 +1,8 @@
-[phases.build]
-cmds = ["npm ci", "npm run build"]
+[phases.install]
+cmds = ["npm ci --ignore-scripts"]
 
-[phases.start]
+[phases.build]
+cmds = ["./node_modules/typescript/bin/tsc"]
+
+[start]
 cmd = "node dist/index.js"
