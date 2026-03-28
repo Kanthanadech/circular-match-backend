@@ -1,5 +1,8 @@
 [phases.install]
 cmds = ["npm ci --ignore-scripts", "npx prisma generate"]
 
+[phases.deploy]
+cmds = ["npx prisma migrate deploy"]
+
 [start]
 cmd = "node dist/index.js"
