@@ -16,7 +16,7 @@ const PORT = process.env.PORT ?? 3000;
 // ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(cors({
   origin: process.env.NODE_ENV === "production"
-    ? ["https://yourdomain.com"]           // lock down in prod
+    ? ["https://yourdomain.com", "http://localhost:3001", "http://localhost:5500"]           // lock down in prod
     : "*",
   methods: ["GET", "POST", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
