@@ -1,5 +1,5 @@
 [phases.install]
-cmds = ["npm ci --ignore-scripts"]
+cmds = ["npm ci --ignore-scripts", "npx prisma generate"]
 
 [start]
 cmd = "node dist/index.js"
