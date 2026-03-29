@@ -1,5 +1,4 @@
 "use strict";
-// src/controllers/auth.controller.ts
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -7,114 +6,76 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.register = register;
 exports.login = login;
 exports.getMe = getMe;
+exports.sendMatchEmail = sendMatchEmail;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const zod_1 = require("zod");
-const prisma_1 = require("../utils/prisma");
-// ─── Validation Schemas ───────────────────────────────────────────────────────
-const registerSchema = zod_1.z.object({
-    email: zod_1.z.string().email("Invalid email format"),
-    password: zod_1.z.string().min(8, "Password must be at least 8 characters"),
-    companyName: zod_1.z.string().min(2, "Company name is required"),
-    role: zod_1.z.enum(["GENERATOR", "RECEIVER"]).default("GENERATOR"),
-    addressText: zod_1.z.string().optional(),
-    // Coordinates: either provide directly OR derive from addressText via Google Geocoding
-    lat: zod_1.z.number().min(-90).max(90).optional(),
-    lng: zod_1.z.number().min(-180).max(180).optional(),
-});
-const loginSchema = zod_1.z.object({
-    email: zod_1.z.string().email(),
-    password: zod_1.z.string().min(1),
-});
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-function signToken(userId) {
-    const secret = process.env.JWT_SECRET;
-    if (!secret)
-        throw new Error("JWT_SECRET not configured");
-    return jsonwebtoken_1.default.sign({ userId }, secret, {
-        expiresIn: process.env.JWT_EXPIRES_IN ?? "7d",
-    });
-}
-/**
- * Geocode an address using Google Geocoding API.
- * Falls back to null/null if the API key is not set (dev mode).
- */
-async function geocodeAddress(address) {
-    const apiKey = process.env.GOOGLE_MAPS_API_KEY;
-    if (!apiKey) {
-        console.warn("[Geocoding] GOOGLE_MAPS_API_KEY not set — skipping geocoding");
-        return { lat: null, lng: null };
-    }
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
-    const res = await fetch(url);
-    const data = (await res.json());
-    if (data.status !== "OK" || !data.results[0]) {
-        console.warn("[Geocoding] Could not geocode address:", address);
-        return { lat: null, lng: null };
-    }
-    return data.results[0].geometry.location;
-}
-// ─── Controllers ─────────────────────────────────────────────────────────────
-/**
- * POST /api/auth/register
- * Body: { email, password, companyName, role, addressText?, lat?, lng? }
- */
+const client_1 = require("@prisma/client");
+const resend_1 = require("resend");
+const prisma = new client_1.PrismaClient();
+const resend = new resend_1.Resend(process.env.RESEND_API_KEY);
+const JWT_SECRET = process.env.JWT_SECRET || "circular-match-secret-2025";
+const FROM_EMAIL = "onboarding@resend.dev";
+const APP_NAME = "Circular Match";
+// ── REGISTER ──────────────────────────────────────────────
 async function register(req, res) {
     try {
-        // 1. Validate input
-        const parsed = registerSchema.safeParse(req.body);
-        if (!parsed.success) {
-            res.status(400).json({
-                success: false,
-                message: "Validation error",
-                errors: parsed.error.flatten().fieldErrors,
-            });
+        const { email, password, company, businessType, lat, lng } = req.body;
+        if (!email || !password || !company) {
+            res.status(400).json({ success: false, message: "กรุณากรอกข้อมูลที่จำเป็น" });
             return;
         }
-        const { email, password, companyName, role, addressText, lat, lng } = parsed.data;
-        // 2. Check duplicate email
-        const existing = await prisma_1.prisma.user.findUnique({ where: { email } });
+        const existing = await prisma.user.findUnique({ where: { email } });
         if (existing) {
-            res.status(409).json({ success: false, message: "Email already in use" });
+            res.status(409).json({ success: false, message: "Email นี้ถูกใช้แล้ว" });
             return;
         }
-        // 3. Hash password (cost factor 12 = production-safe)
-        const passwordHash = await bcryptjs_1.default.hash(password, 12);
-        // 4. Resolve coordinates
-        let resolvedLat = lat ?? null;
-        let resolvedLng = lng ?? null;
-        if ((!resolvedLat || !resolvedLng) && addressText) {
-            const coords = await geocodeAddress(addressText);
-            resolvedLat = coords.lat;
-            resolvedLng = coords.lng;
-        }
-        // 5. Create user
-        const user = await prisma_1.prisma.user.create({
+        const hashed = await bcryptjs_1.default.hash(password, 10);
+        const user = await prisma.user.create({
             data: {
                 email,
-                passwordHash,
-                companyName,
-                role,
-                addressText: addressText ?? null,
-                lat: resolvedLat,
-                lng: resolvedLng,
-            },
-            select: {
-                id: true,
-                email: true,
-                companyName: true,
-                role: true,
-                lat: true,
-                lng: true,
-                createdAt: true,
+                password: hashed,
+                companyName: company,
+                businessType: businessType || "Other",
+                lat: lat || 13.7563,
+                lng: lng || 100.5018,
+                role: "GENERATOR",
             },
         });
-        // 6. Issue token
-        const token = signToken(user.id);
+        // Send welcome email
+        try {
+            await resend.emails.send({
+                from: `${APP_NAME} <${FROM_EMAIL}>`,
+                to: email,
+                subject: `🌿 ยินดีต้อนรับสู่ ${APP_NAME}!`,
+                html: `
+          <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#f5f2ea;padding:32px;border-radius:12px">
+            <div style="background:#0d1208;padding:20px;border-radius:8px;text-align:center;margin-bottom:24px">
+              <h1 style="color:#b5d96a;margin:0;font-size:24px">♻ Circular Match</h1>
+              <p style="color:rgba(255,255,255,0.5);margin:4px 0 0;font-size:12px">Tinder for Waste · เศรษฐกิจหมุนเวียน</p>
+            </div>
+            <h2 style="color:#0d1208">สวัสดี ${company}! 👋</h2>
+            <p style="color:#5a6a50">บัญชีของคุณถูกสร้างเรียบร้อยแล้ว พร้อมเริ่มจับคู่วัสดุเหลือทิ้งเพื่อสร้างมูลค่าใหม่</p>
+            <div style="background:#fff;border-radius:8px;padding:16px;margin:20px 0;border-left:4px solid #2d6a1f">
+              <p style="margin:0;font-size:13px;color:#5a6a50">📧 Email: <strong>${email}</strong></p>
+              <p style="margin:4px 0 0;font-size:13px;color:#5a6a50">🏢 บริษัท: <strong>${company}</strong></p>
+            </div>
+            <p style="color:#5a6a50;font-size:13px">เริ่มโพสต์วัสดุเหลือทิ้งและค้นหาผู้รับได้เลยครับ 🚀</p>
+            <div style="margin-top:24px;padding-top:16px;border-top:1px solid #d0cab8;font-size:11px;color:#b0a890;text-align:center">
+              Circular Match · GHG Protocol Scope 3 · Carbon Saving Platform
+            </div>
+          </div>
+        `,
+            });
+        }
+        catch (emailErr) {
+            console.warn("[Auth] Welcome email failed:", emailErr);
+        }
+        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
         res.status(201).json({
             success: true,
-            message: "Registration successful",
-            data: { user, token },
+            message: "สมัครสมาชิกสำเร็จ! ตรวจสอบ email ของคุณ",
+            token,
+            user: { id: user.id, email: user.email, company: user.companyName },
         });
     }
     catch (error) {
@@ -122,53 +83,30 @@ async function register(req, res) {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
-/**
- * POST /api/auth/login
- * Body: { email, password }
- */
+// ── LOGIN ──────────────────────────────────────────────────
 async function login(req, res) {
     try {
-        // 1. Validate input
-        const parsed = loginSchema.safeParse(req.body);
-        if (!parsed.success) {
-            res.status(400).json({
-                success: false,
-                message: "Validation error",
-                errors: parsed.error.flatten().fieldErrors,
-            });
+        const { email, password } = req.body;
+        if (!email || !password) {
+            res.status(400).json({ success: false, message: "กรุณากรอก email และ password" });
             return;
         }
-        const { email, password } = parsed.data;
-        // 2. Find user
-        const user = await prisma_1.prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
-            // Timing-safe: always compare to prevent user enumeration
-            await bcryptjs_1.default.compare(password, "$2a$12$dummyhashtopreventtimingattacks00000000000000000000000");
-            res.status(401).json({ success: false, message: "Invalid credentials" });
+            res.status(401).json({ success: false, message: "ไม่พบบัญชีนี้" });
             return;
         }
-        // 3. Verify password
-        const passwordMatch = await bcryptjs_1.default.compare(password, user.passwordHash);
-        if (!passwordMatch) {
-            res.status(401).json({ success: false, message: "Invalid credentials" });
+        const valid = await bcryptjs_1.default.compare(password, user.password);
+        if (!valid) {
+            res.status(401).json({ success: false, message: "รหัสผ่านไม่ถูกต้อง" });
             return;
         }
-        // 4. Issue token
-        const token = signToken(user.id);
+        const token = jsonwebtoken_1.default.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
         res.json({
             success: true,
-            message: "Login successful",
-            data: {
-                token,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    companyName: user.companyName,
-                    role: user.role,
-                    lat: user.lat,
-                    lng: user.lng,
-                },
-            },
+            message: "เข้าสู่ระบบสำเร็จ",
+            token,
+            user: { id: user.id, email: user.email, company: user.companyName },
         });
     }
     catch (error) {
@@ -176,29 +114,19 @@ async function login(req, res) {
         res.status(500).json({ success: false, message: "Internal server error" });
     }
 }
-/**
- * GET /api/auth/me  (protected)
- * Returns the currently authenticated user's profile
- */
+// ── GET ME ─────────────────────────────────────────────────
 async function getMe(req, res) {
     try {
-        // req.user is populated by authMiddleware
         const authReq = req;
         if (!authReq.user) {
             res.status(401).json({ success: false, message: "Not authenticated" });
             return;
         }
-        const user = await prisma_1.prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { id: authReq.user.id },
             select: {
-                id: true,
-                email: true,
-                companyName: true,
-                role: true,
-                addressText: true,
-                lat: true,
-                lng: true,
-                createdAt: true,
+                id: true, email: true, companyName: true, role: true,
+                addressText: true, lat: true, lng: true, createdAt: true,
                 _count: { select: { wastes: true, matchesReceived: true } },
             },
         });
@@ -207,6 +135,34 @@ async function getMe(req, res) {
     catch (error) {
         console.error("[Auth] GetMe error:", error);
         res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+// ── SEND MATCH NOTIFICATION ────────────────────────────────
+async function sendMatchEmail(toEmail, toCompany, wasteTitle, co2, dist) {
+    try {
+        await resend.emails.send({
+            from: `${APP_NAME} <${FROM_EMAIL}>`,
+            to: toEmail,
+            subject: `🤝 การจับคู่ใหม่: ${wasteTitle}`,
+            html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#f5f2ea;padding:32px;border-radius:12px">
+          <div style="background:#0d1208;padding:20px;border-radius:8px;text-align:center;margin-bottom:24px">
+            <h1 style="color:#b5d96a;margin:0;font-size:24px">♻ Circular Match</h1>
+          </div>
+          <h2 style="color:#0d1208">🎉 จับคู่สำเร็จ!</h2>
+          <p style="color:#5a6a50">สวัสดี <strong>${toCompany}</strong> — การจับคู่ใหม่เกิดขึ้นแล้ว!</p>
+          <div style="background:#fff;border-radius:8px;padding:16px;margin:20px 0;border-left:4px solid #2d6a1f">
+            <p style="margin:0;font-size:14px;color:#0d1208">📦 วัสดุ: <strong>${wasteTitle}</strong></p>
+            <p style="margin:6px 0 0;font-size:14px;color:#2d6a1f">🌿 CO₂ ลดได้: <strong>${co2} kgCO₂e</strong></p>
+            <p style="margin:6px 0 0;font-size:14px;color:#c97b1a">📍 ระยะทาง: <strong>${dist} กม.</strong></p>
+          </div>
+          <p style="color:#5a6a50;font-size:13px">ขอบคุณที่ช่วยลดขยะและประหยัด carbon ครับ 🌍</p>
+        </div>
+      `,
+        });
+    }
+    catch (err) {
+        console.warn("[Auth] Match email failed:", err);
     }
 }
 //# sourceMappingURL=auth.controller.js.map
