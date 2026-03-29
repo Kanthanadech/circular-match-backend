@@ -10,8 +10,8 @@ export async function listWastes(req: Request, res: Response): Promise<void> {
   try {
     const { status, category, limit } = req.query;
     const where: any = {};
-    if (status) where.status = String(status).toUpperCase();
-    if (category) where.category = String(category).toUpperCase();
+    if (status) where.status = String(status).toUpperCase() as any;
+    if (category) where.category = String(category).toUpperCase() as any;
 
     const wastes = await prisma.waste.findMany({
       where,
