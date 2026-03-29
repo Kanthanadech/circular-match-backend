@@ -15,12 +15,12 @@ matchRouter.use(authMiddleware);
 // GET /api/matches/recommendations?radiusKm=50&category=ORGANIC
 matchRouter.get(
   "/recommendations",
-  requireRole("RECEIVER", "ADMIN"),
+  requireRole("RECEIVER", "GENERATOR", "ADMIN"),
   getRecommendations
 );
 
 // POST /api/matches  — confirm a match
-matchRouter.post("/", requireRole("RECEIVER", "ADMIN"), createMatch);
+matchRouter.post("/", requireRole("RECEIVER", "GENERATOR", "ADMIN"), createMatch);
 
 // PATCH /api/matches/:matchId/status
 matchRouter.patch("/:matchId/status", updateMatchStatus);

@@ -9,9 +9,9 @@ exports.matchRouter = (0, express_1.Router)();
 // All match routes require authentication
 exports.matchRouter.use(auth_middleware_1.authMiddleware);
 // GET /api/matches/recommendations?radiusKm=50&category=ORGANIC
-exports.matchRouter.get("/recommendations", (0, auth_middleware_1.requireRole)("RECEIVER", "ADMIN"), match_controller_1.getRecommendations);
+exports.matchRouter.get("/recommendations", (0, auth_middleware_1.requireRole)("RECEIVER", "GENERATOR", "ADMIN"), match_controller_1.getRecommendations);
 // POST /api/matches  — confirm a match
-exports.matchRouter.post("/", (0, auth_middleware_1.requireRole)("RECEIVER", "ADMIN"), match_controller_1.createMatch);
+exports.matchRouter.post("/", (0, auth_middleware_1.requireRole)("RECEIVER", "GENERATOR", "ADMIN"), match_controller_1.createMatch);
 // PATCH /api/matches/:matchId/status
 exports.matchRouter.patch("/:matchId/status", match_controller_1.updateMatchStatus);
 //# sourceMappingURL=match.routes.js.map
