@@ -10,6 +10,7 @@ import { matchRouter } from "./routes/match.routes";
 import { reportRouter } from "./routes/report.routes";
 import exportRouter from "./routes/export.routes";
 import { prisma } from "./utils/prisma";
+import dashboardRouter from './routes/dashboard';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -55,6 +56,7 @@ app.use("/api/wastes",  wasteRouter);
 app.use("/api/matches", matchRouter);
 app.use("/api/export",  exportRouter);
 app.use("/api/reports", reportRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {

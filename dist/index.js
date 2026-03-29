@@ -14,6 +14,7 @@ const match_routes_1 = require("./routes/match.routes");
 const report_routes_1 = require("./routes/report.routes");
 const export_routes_1 = __importDefault(require("./routes/export.routes"));
 const prisma_1 = require("./utils/prisma");
+const dashboard_1 = __importDefault(require("./routes/dashboard"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT ?? 3000;
 // ─── Global Middleware ────────────────────────────────────────────────────────
@@ -54,6 +55,7 @@ app.use("/api/wastes", waste_routes_1.wasteRouter);
 app.use("/api/matches", match_routes_1.matchRouter);
 app.use("/api/export", export_routes_1.default);
 app.use("/api/reports", report_routes_1.reportRouter);
+app.use('/api/dashboard', dashboard_1.default);
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {
     res.status(404).json({
