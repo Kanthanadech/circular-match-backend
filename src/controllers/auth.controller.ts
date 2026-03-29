@@ -66,7 +66,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       console.warn("[Auth] Welcome email failed:", emailErr);
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
     res.status(201).json({
       success: true,
       message: "สมัครสมาชิกสำเร็จ! ตรวจสอบ email ของคุณ",
@@ -97,7 +97,7 @@ export async function login(req: Request, res: Response): Promise<void> {
       res.status(401).json({ success: false, message: "รหัสผ่านไม่ถูกต้อง" });
       return;
     }
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: "7d" });
     res.json({
       success: true,
       message: "เข้าสู่ระบบสำเร็จ",
