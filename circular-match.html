@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circular Match — Waste Matching Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d1208;--ink2:#2a3320;--ink3:#5a6a50;
+  --paper:#f5f2ea;--paper2:#ede9df;--paper3:#e4dfd2;
+  --leaf:#2d6a1f;--leaf2:#3d8a2a;--leaf3:#5aad3d;
+  --lime:#8ec63f;--lime2:#b5d96a;--lime3:#d6edaa;
+  --amber:#c97b1a;--amber2:#e8a030;--amber3:#f5c96a;
+  --teal:#1a6a5a;--teal2:#2a9a82;--teal3:#4abca0;
+  --red2:#c04040;
+  --border:#d0cab8;--border2:#b0a890;
+  --shadow:rgba(13,18,8,.1);
+}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Sarabun',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
+.mono{font-family:'DM Mono',monospace}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--paper2)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;background:var(--ink);padding:0 28px;display:flex;align-items:center;border-bottom:2px solid var(--leaf)}
+.nav-logo{display:flex;align-items:center;gap:9px;padding:13px 0;margin-right:24px;text-decoration:none}
+.nav-logo-mark{width:32px;height:32px;background:var(--leaf3);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.nav-logo-text{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.nav-logo-text span{color:var(--lime2)}
+.nav-links{display:flex;flex:1}
+.nav-link{padding:15px 16px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
+.nav-link:hover{color:rgba(255,255,255,.85)}
+.nav-link.active{color:var(--lime2);border-bottom-color:var(--lime2)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.nav-badge{background:var(--leaf);color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;font-family:'DM Mono'}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* HERO */
+.hero{background:var(--ink);color:#fff;padding:36px 36px 0;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(45,106,31,.35) 0%,transparent 70%);right:-80px;top:-180px;pointer-events:none}
+.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:end;max-width:1060px;margin:0 auto}
+.hero-kicker{font-family:'DM Mono';font-size:10px;font-weight:500;color:var(--lime2);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.hero-title{font-family:'Fraunces',serif;font-size:42px;font-weight:900;line-height:1.05;letter-spacing:-1px;margin-bottom:14px}
+.hero-title .accent{color:var(--lime2)}
+.hero-sub{font-size:14px;color:rgba(255,255,255,.55);max-width:380px;line-height:1.7}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.07);border-radius:11px;overflow:hidden;align-self:end}
+.hero-stat{background:rgba(255,255,255,.03);padding:18px}
+.hero-stat-val{font-family:'Fraunces',serif;font-size:30px;font-weight:700;color:var(--lime2);line-height:1;margin-bottom:3px}
+.hero-stat-label{font-size:11px;color:rgba(255,255,255,.45)}
+.hero-bar{margin-top:28px;background:rgba(255,255,255,.05);height:44px;display:flex;align-items:center;gap:20px;padding:0 28px;font-size:11px;color:rgba(255,255,255,.35);font-family:'DM Mono'}
+.hero-bar span{color:var(--lime3)}
+
+/* CONTENT */
+.content{max-width:1060px;margin:0 auto;padding:28px 36px}
+
+/* FILTER BAR */
+.filter-bar{display:flex;align-items:center;gap:9px;margin-bottom:22px;flex-wrap:wrap}
+.filter-pill{padding:6px 14px;border-radius:100px;border:1.5px solid var(--border);background:var(--paper);font-size:13px;font-weight:600;cursor:pointer;color:var(--ink3);transition:all .15s}
+.filter-pill:hover{border-color:var(--leaf3);color:var(--leaf)}
+.filter-pill.active{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.search-input{flex:1;min-width:180px;max-width:300px;padding:7px 13px;border:1.5px solid var(--border);border-radius:7px;font-family:'Sarabun';font-size:14px;background:var(--paper);color:var(--ink);outline:none}
+.search-input:focus{border-color:var(--leaf3)}
+
+/* WASTE GRID */
+.waste-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:15px}
+.waste-card{background:#fff;border:1.5px solid var(--border);border-radius:13px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;position:relative}
+.waste-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px var(--shadow);border-color:var(--leaf3)}
+.waste-card-header{padding:15px 16px 11px;border-bottom:1px solid var(--paper3);display:flex;align-items:flex-start;gap:11px}
+.waste-icon-wrap{width:46px;height:46px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.waste-card-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.waste-card-from{font-size:11px;color:var(--ink3)}
+.waste-status{position:absolute;top:13px;right:13px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;font-family:'DM Mono';letter-spacing:.5px;text-transform:uppercase}
+.s-available{background:var(--lime3);color:var(--leaf)}
+.s-matched{background:#fce8d0;color:#a05010}
+.waste-card-body{padding:13px 16px}
+.waste-specs{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px}
+.spec-item{background:var(--paper2);border-radius:6px;padding:7px 9px}
+.spec-label{font-size:9px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.spec-val{font-size:14px;font-weight:700;color:var(--ink);font-family:'DM Mono'}
+.waste-co2-preview{display:flex;align-items:center;gap:7px;background:linear-gradient(135deg,#e8f5e0,#f0fae8);border:1px solid #c8e8b0;border-radius:7px;padding:7px 11px;font-size:12px}
+.co2-preview-val{font-weight:700;color:var(--leaf);font-family:'DM Mono'}
+.waste-card-footer{padding:9px 16px;border-top:1px solid var(--paper3);display:flex;align-items:center;justify-content:space-between}
+.dist-badge{font-size:11px;color:var(--ink3)}
+.btn-match{padding:6px 14px;background:var(--leaf);color:#fff;border:none;border-radius:6px;font-family:'Sarabun';font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-match:hover{background:var(--leaf2)}
+.btn-match:disabled{background:var(--border);color:var(--ink3);cursor:default}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(13,18,8,.6);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;transform:translateY(18px);transition:transform .25s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{padding:22px 22px 16px;border-bottom:1px solid var(--paper3);position:sticky;top:0;background:#fff;z-index:1;border-radius:16px 16px 0 0;display:flex;align-items:flex-start;justify-content:space-between}
+.modal-title{font-family:'Fraunces',serif;font-size:18px;font-weight:700}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:var(--paper2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.modal-close:hover{background:var(--paper3)}
+.modal-body{padding:18px 22px 22px}
+
+/* ALGO STEPS */
+.algo-section-title{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;font-family:'DM Mono'}
+.algo-steps{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.algo-step{display:flex;gap:9px;align-items:flex-start;padding:9px;background:var(--paper);border-radius:7px;border:1px solid var(--border);opacity:0;transform:translateX(-8px);transition:opacity .3s,transform .3s}
+.algo-step.reveal{opacity:1;transform:translateX(0)}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono';display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .3s}
+.step-num.done{background:var(--leaf3);color:var(--leaf)}
+.step-text{font-size:12px;color:var(--ink2);flex:1}
+.step-code{font-family:'DM Mono';font-size:10px;color:var(--teal2);background:var(--ink);padding:3px 7px;border-radius:3px;margin-top:3px;display:block;line-height:1.6}
+.result-card{background:var(--paper);border:1.5px solid var(--leaf3);border-radius:9px;padding:13px}
+.result-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px}
+.result-row .k{color:var(--ink3)}
+.result-row .v{font-weight:700;font-family:'DM Mono'}
+.result-row .v.green{color:var(--leaf)}
+.result-row .v.amber{color:var(--amber)}
+.match-confirm-btn{width:100%;padding:13px;background:var(--leaf);color:#fff;border:none;border-radius:9px;font-family:'Fraunces',serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:13px;transition:all .2s;letter-spacing:.2px}
+.match-confirm-btn:hover{background:var(--leaf2)}
+.match-confirm-btn.confirmed{background:var(--amber2)}
+.match-confirm-btn:disabled{opacity:.6;cursor:default}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:span 2}
+.form-label{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.7px}
+.form-input,.form-select,.form-textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:7px;font-family:'Sarabun';font-size:14px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--leaf3)}
+.form-textarea{resize:vertical;min-height:72px}
+.form-hint{font-size:11px;color:var(--ink3)}
+.form-submit{padding:12px 24px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-family:'Fraunces',serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px}
+.form-submit:hover{background:var(--leaf)}
+
+/* DASHBOARD */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.dash-stat{background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:16px}
+.dash-stat-label{font-size:10px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.dash-stat-val{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--ink);line-height:1}
+.dash-stat-val.green{color:var(--leaf)}
+.dash-stat-val.amber{color:var(--amber)}
+.dash-stat-delta{font-size:11px;color:var(--leaf);margin-top:3px}
+.dash-two{display:grid;grid-template-columns:5fr 4fr;gap:14px}
+.panel{background:#fff;border:1.5px solid var(--border);border-radius:13px;padding:18px}
+.panel-title{font-family:'Fraunces',serif;font-size:16px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.panel-title .dot{width:7px;height:7px;border-radius:50%;background:var(--leaf3);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.match-log{display:flex;flex-direction:column;gap:9px}
+.match-log-item{display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--paper);border-radius:8px;border:1px solid var(--border)}
+.log-icon{width:34px;height:34px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.log-content{flex:1}
+.log-title{font-size:13px;font-weight:700;margin-bottom:1px}
+.log-meta{font-size:11px;color:var(--ink3)}
+.log-co2{font-family:'DM Mono';font-size:11px;font-weight:500;color:var(--leaf);background:var(--lime3);padding:2px 7px;border-radius:4px;white-space:nowrap;align-self:center}
+.carbon-bar-item{margin-bottom:10px}
+.carbon-bar-head{display:flex;justify-content:space-between;margin-bottom:3px;font-size:12px}
+.carbon-bar-label{color:var(--ink2);font-weight:600}
+.carbon-bar-val{font-family:'DM Mono';font-weight:500;color:var(--leaf)}
+.carbon-track{height:9px;background:var(--paper3);border-radius:5px;overflow:hidden;border:1px solid var(--border)}
+.carbon-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--leaf),var(--lime2));transition:width .8s cubic-bezier(.4,0,.2,1)}
+
+/* ESG REPORT */
+.report-header{background:var(--ink);color:#fff;padding:36px;border-radius:13px;margin-bottom:22px;position:relative;overflow:hidden}
+.report-header::after{content:'ESG';position:absolute;right:-15px;bottom:-35px;font-family:'Fraunces',serif;font-size:150px;font-weight:900;color:rgba(255,255,255,.04);pointer-events:none;letter-spacing:-6px;line-height:1}
+.report-company{font-size:11px;color:var(--lime2);font-family:'DM Mono';margin-bottom:7px}
+.report-title{font-family:'Fraunces',serif;font-size:34px;font-weight:900;line-height:1.1;margin-bottom:11px}
+.report-period{font-size:12px;color:rgba(255,255,255,.45)}
+.report-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:22px}
+.report-metric{background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:18px;text-align:center}
+.report-metric-icon{font-size:26px;margin-bottom:7px}
+.report-metric-val{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--leaf);line-height:1;margin-bottom:3px}
+.report-metric-label{font-size:11px;color:var(--ink3)}
+.report-breakdown{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.formula-box{background:var(--ink);border-radius:9px;padding:14px;font-family:'DM Mono';font-size:11px;color:rgba(255,255,255,.65);line-height:2;margin-top:11px}
+.formula-box .comment{color:rgba(255,255,255,.28)}
+.formula-box .kw{color:var(--lime2)}
+.formula-box .val{color:var(--amber3)}
+
+/* API DOCS */
+.api-endpoint{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:18px;margin-bottom:14px}
+.api-method{display:inline-block;font-family:'DM Mono';font-size:10px;font-weight:700;padding:2px 9px;border-radius:4px;color:#fff;margin-right:8px}
+.api-path{font-family:'DM Mono';font-size:12px;color:var(--ink2)}
+.api-desc{font-size:13px;color:var(--ink3);margin:8px 0 10px}
+.code-block{background:var(--ink);padding:10px 13px;border-radius:6px;font-family:'DM Mono';font-size:11px;color:#a8e063;overflow-x:auto;white-space:pre-wrap;line-height:1.6}
+.code-block-label{font-size:10px;color:var(--ink3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:1000;background:var(--ink);color:#fff;padding:12px 18px;border-radius:9px;font-size:13px;font-weight:600;transform:translateY(18px);opacity:0;transition:all .3s;pointer-events:none;max-width:280px;border-left:4px solid var(--lime2)}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:50px 20px;color:var(--ink3)}
+.empty-icon{font-size:44px;margin-bottom:10px}
+
+/* SECTION */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.section-title-main{font-family:'Fraunces',serif;font-size:21px;font-weight:700}
+
+@media(max-width:768px){
+  .hero-grid,.dash-two,.report-breakdown{grid-template-columns:1fr}
+  .hero-stats{display:none}
+  .dash-grid,.report-metrics{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .form-group.full{grid-column:span 1}
+  nav{padding:0 14px}
+  .content{padding:18px 14px}
+  .hero{padding:22px 14px 0}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#" onclick="window.showPage('feed');return false">
+    <div class="nav-logo-mark">♻</div>
+    <div class="nav-logo-text">Circular<span>Match</span></div>
+  </a>
+  <div class="nav-links">
+    <div class="nav-link active" onclick="window.showPage('feed')">🔍 หาวัสดุ</div>
+    <div class="nav-link" onclick="window.showPage('post')">+ โพสต์</div>
+    <div class="nav-link" onclick="window.showPage('dashboard')">📊 Dashboard</div>
+    <div class="nav-link" onclick="window.showPage('esg')">🌿 ESG Report</div>
+    <div class="nav-link" onclick="window.showPage('api')">⚙️ API Docs</div>
+  </div>
+  <div class="nav-right">
+    <div class="nav-badge" id="matchCountBadge">0 matches</div>
+    <div id="navUser" style="display:none;align-items:center;gap:8px">
+      <span id="navUserName" style="font-size:12px;color:rgba(255,255,255,.6);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+      <button onclick="window.doLogout()" style="padding:5px 11px;border:1px solid rgba(255,255,255,.2);border-radius:6px;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;background:none;font-family:Sarabun">ออกจากระบบ</button>
+    </div>
+    <button id="navLoginBtn" onclick="window.openAuthModal()" style="padding:6px 14px;background:var(--leaf);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:Sarabun">เข้าสู่ระบบ</button>
+  </div>
+</nav>
+
+<!-- ════ PAGE: FEED ════ -->
+<div id="page-feed" class="page active">
+  <div class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-kicker">Tinder for Waste · เศรษฐกิจหมุนเวียน</div>
+        <h1 class="hero-title">ขยะของคุณ<br>คือ<span class="accent">วัตถุดิบ</span><br>ของเขา</h1>
+        <p class="hero-sub">แพลตฟอร์มจับคู่วัสดุเหลือทิ้งสู่มูลค่าใหม่ ด้วย Smart Matching Algorithm + Carbon Saving Real-time</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-val" id="heroMatches">0</div><div class="hero-stat-label">การจับคู่วันนี้</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="heroCO2">0</div><div class="hero-stat-label">kgCO₂e ประหยัด</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="heroListings">0</div><div class="hero-stat-label">รายการทั้งหมด</div></div>
+      </div>
+    </div>
+    <div class="hero-bar">
+      <span>⚡ Smart Match</span>
+      <span>📍 Haversine GPS</span>
+      <span>🌿 Carbon Calc</span>
+      <span>📊 ESG Auto-Report</span>
+      <span>🚚 Transport API</span>
+    </div>
+  </div>
+  <div class="content">
+    <div class="filter-bar">
+      <input class="search-input" id="searchInput" type="text" placeholder="🔍 ค้นหาวัสดุ..." oninput="window.filterWastes(this.value)">
+      <div class="filter-pill active" onclick="window.filterCat('all',this)">ทั้งหมด</div>
+      <div class="filter-pill" onclick="window.filterCat('Organic',this)">🌿 Organic</div>
+      <div class="filter-pill" onclick="window.filterCat('Wood',this)">🪵 Wood</div>
+      <div class="filter-pill" onclick="window.filterCat('Oil',this)">🍳 Oil</div>
+      <div class="filter-pill" onclick="window.filterCat('Plastic',this)">♻ Plastic</div>
+      <div class="filter-pill" onclick="window.filterCat('Paper',this)">📄 Paper</div>
+    </div>
+    <div class="waste-grid" id="wasteGrid"></div>
+  </div>
+</div>
+
+<!-- ════ PAGE: POST ════ -->
+<div id="page-post" class="page">
+  <div class="content" style="max-width:660px">
+    <div class="section-header" style="margin-bottom:6px">
+      <h2 class="section-title-main">📦 โพสต์วัสดุเหลือทิ้ง</h2>
+    </div>
+    <p style="color:var(--ink3);margin-bottom:22px;font-size:14px">ระบบจะจับคู่ให้อัตโนมัติตาม GPS และ Match Score</p>
+    <div class="panel">
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">ชื่อบริษัท / ร้าน</label><input class="form-input" id="f_company" placeholder="เช่น Café Amazon สาขาสีลม"></div>
+        <div class="form-group"><label class="form-label">ประเภทธุรกิจ</label>
+          <select class="form-select" id="f_biz">
+            <option>Coffee Shop</option><option>Restaurant</option>
+            <option>Factory</option><option>Farm</option><option>Supermarket</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">ชื่อวัสดุ</label><input class="form-input" id="f_title" placeholder="เช่น กากกาแฟ 50 กก."></div>
+        <div class="form-group"><label class="form-label">หมวดหมู่</label>
+          <select class="form-select" id="f_cat" onchange="window.updateCO2Preview()" >
+            <option value="Organic">🌿 Organic</option><option value="Wood">🪵 Wood</option>
+            <option value="Oil">🍳 Oil</option><option value="Plastic">♻ Plastic</option><option value="Paper">📄 Paper</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">น้ำหนัก (กก.)</label><input class="form-input" id="f_weight" type="number" min="1" placeholder="50" oninput="window.updateCO2Preview()"><div class="form-hint">ใช้คำนวณ Carbon Saving</div></div>
+        <div class="form-group"><label class="form-label">ความถี่</label>
+          <select class="form-select" id="f_freq" onchange="window.updateCO2Preview()">
+            <option value="daily">ทุกวัน</option><option value="weekly">ทุกสัปดาห์</option>
+            <option value="monthly">ทุกเดือน</option><option value="once">ครั้งเดียว</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">ละติจูด (lat)</label><input class="form-input" id="f_lat" type="number" step="0.0001" placeholder="13.7563"><div class="form-hint">📍 จาก Google Maps</div></div>
+        <div class="form-group"><label class="form-label">ลองจิจูด (lng)</label><input class="form-input" id="f_lng" type="number" step="0.0001" placeholder="100.5018"></div>
+        <div class="form-group full"><label class="form-label">รายละเอียด</label><textarea class="form-textarea" id="f_desc" placeholder="เช่น กากกาแฟสด ไม่มีสารเคมี เหมาะทำปุ๋ยหมัก..."></textarea></div>
+      </div>
+      <div style="margin-top:14px;padding:11px;background:linear-gradient(135deg,#e8f5e0,#f0fae8);border-radius:7px;border:1px solid #c8e8b0">
+        <div style="font-size:11px;font-weight:700;color:var(--leaf);margin-bottom:4px">🌿 Carbon Preview</div>
+        <div style="font-size:13px;color:var(--leaf2)" id="co2Preview">กรอกน้ำหนักเพื่อดู CO₂ ที่จะลดได้</div>
+      </div>
+      <button class="form-submit" onclick="window.submitPost()">🚀 โพสต์วัสดุนี้</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: DASHBOARD ════ -->
+<div id="page-dashboard" class="page">
+  <div class="content">
+    <div class="section-header">
+      <h2 class="section-title-main">📊 Dashboard — ฟาร์มสวนเกษตร (User #2)</h2>
+      <div style="font-size:11px;color:var(--ink3);font-family:'DM Mono'">GET /api/dashboard/stats?user_id=2</div>
+    </div>
+    <div class="dash-grid">
+      <div class="dash-stat"><div class="dash-stat-label">วัสดุ Recycled</div><div class="dash-stat-val green" id="d_recycled">0 กก.</div><div class="dash-stat-delta">เบี่ยงเบนจากหลุมฝังกลบ</div></div>
+      <div class="dash-stat"><div class="dash-stat-label">Carbon Saved</div><div class="dash-stat-val green" id="d_carbon">0</div><div class="dash-stat-delta">kgCO₂e สะสม</div></div>
+      <div class="dash-stat"><div class="dash-stat-label">การจับคู่สำเร็จ</div><div class="dash-stat-val" id="d_matches">0 ครั้ง</div><div class="dash-stat-delta" id="d_matches_d">—</div></div>
+      <div class="dash-stat"><div class="dash-stat-label">ประหยัดค่ากำจัด</div><div class="dash-stat-val amber" id="d_thb">฿0</div><div class="dash-stat-delta">บาทสะสม</div></div>
+    </div>
+    <div class="dash-two">
+      <div class="panel">
+        <div class="panel-title"><div class="dot"></div>ประวัติการจับคู่</div>
+        <div class="match-log" id="matchLog"><div class="empty-state"><div class="empty-icon">🔗</div>ยังไม่มีการจับคู่ — ลอง Match ในหน้าหาวัสดุ</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">🌿 Carbon Saving รายหมวด</div>
+        <div id="carbonBars"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: ESG ════ -->
+<div id="page-esg" class="page">
+  <div class="content">
+    <div class="report-header">
+      <div class="report-company">CIRCULAR MATCH · ESG REPORT · GHG PROTOCOL SCOPE 3</div>
+      <div class="report-title">Carbon Reduction<br>Impact Report</div>
+      <div class="report-period">Auto-generated · ปีงบประมาณ 2025</div>
+    </div>
+    <div class="report-metrics">
+      <div class="report-metric"><div class="report-metric-icon">🌿</div><div class="report-metric-val" id="rm_co2">0 kg</div><div class="report-metric-label">kgCO₂e ลดได้สุทธิ</div></div>
+      <div class="report-metric"><div class="report-metric-icon">♻</div><div class="report-metric-val" id="rm_waste">0 kg</div><div class="report-metric-label">กก. เบี่ยงเบนจากหลุมฝังกลบ</div></div>
+      <div class="report-metric"><div class="report-metric-icon">🤝</div><div class="report-metric-val" id="rm_matches">0</div><div class="report-metric-label">การจับคู่สำเร็จ</div></div>
+    </div>
+    <div class="report-breakdown">
+      <div class="panel">
+        <div class="panel-title">📐 Carbon Calculation Methodology</div>
+        <p style="font-size:13px;color:var(--ink3);margin-bottom:10px">ใช้ Emission Factor มาตรฐาน IPCC / Thailand TGO ตาม GHG Protocol Scope 3 Category 5 (Waste Generated in Operations)</p>
+        <div class="formula-box">
+<span class="comment"># Step 1: หลีกเลี่ยงการฝังกลบ (Landfill Avoidance)</span>
+<span class="kw">landfill_saved</span> = weight_kg × EF_material × freq_multiplier
+
+<span class="comment"># Step 2: หักการปล่อย CO₂ จากขนส่ง</span>
+<span class="kw">transport_emit</span> = dist_km × <span class="val">0.07</span> × freq_multiplier
+<span class="comment"># 0.07 = kgCO₂e/km (รถบรรทุก 3 ตัน)</span>
+
+<span class="comment"># Step 3: ผลสุทธิ</span>
+<span class="kw">net_carbon_saved</span> = landfill_saved - transport_emit
+
+<span class="comment"># Emission Factors (kgCO₂e/kg):</span>
+<span class="comment"># Organic=0.32 | Wood=0.58 | Oil=1.20</span>
+<span class="comment"># Paper=0.91  | Plastic=0.75</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">💰 มูลค่าคาร์บอนเครดิต</div>
+        <div style="font-size:12px;color:var(--ink3);margin-bottom:8px">Thailand Voluntary Carbon Market</div>
+        <div style="font-family:'DM Mono';font-size:13px;color:var(--teal2);margin-bottom:14px">฿5.00 / kgCO₂e</div>
+        <div class="result-card">
+          <div class="result-row"><span class="k">Carbon Saved</span><span class="v green" id="ec_co2">0 kgCO₂e</span></div>
+          <div class="result-row"><span class="k">Credit Value</span><span class="v amber" id="ec_val">฿0</span></div>
+          <div class="result-row"><span class="k">Scope</span><span class="v">Scope 3 Cat.5</span></div>
+          <div class="result-row"><span class="k">Standard</span><span class="v">GHG Protocol</span></div>
+        </div>
+        <div style="margin-top:12px;padding:9px 12px;background:#e8f5e0;border-radius:7px;font-size:12px;color:var(--leaf);font-weight:600">✅ พร้อมใช้ใน SET Sustainability Report และ BOI Green Industry</div>
+        <button onclick="alert('📊 Export PDF Report\n\nในระบบจริงใช้ Puppeteer / wkhtmltopdf\nสร้าง PDF + QR Code ยืนยันบน Blockchain')" style="width:100%;margin-top:10px;padding:9px;background:var(--ink);color:#fff;border:none;border-radius:7px;font-family:Sarabun;font-size:13px;font-weight:700;cursor:pointer">📥 Export PDF Report</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PAGE: API DOCS ════ -->
+<div id="page-api" class="page">
+  <div class="content" style="max-width:780px">
+    <div class="section-header">
+      <h2 class="section-title-main">⚙️ API Documentation</h2>
+      <div style="font-size:11px;color:var(--ink3);font-family:'DM Mono'">RESTful · JSON · v1.0</div>
+    </div>
+    <div id="apiDocs"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="matchModal" onclick="window.closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Smart Match</div>
+      <button class="modal-close" onclick="window.closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIG — Railway Backend
+// ═══════════════════════════════════════════════
+const API_BASE = 'https://circular-match-backend-production.up.railway.app';
+const CURRENT_USER_ID = 1; // default user สำหรับ demo
+
+const EF = {Organic:0.32,Wood:0.58,Oil:1.20,Plastic:0.75,Paper:0.91};
+const ICONS = {Organic:'🌿',Wood:'🪵',Oil:'🍳',Plastic:'♻',Paper:'📄'};
+const BGS = {Organic:'#e8f5e0',Wood:'#f5ead0',Oil:'#fdf0d0',Plastic:'#d8eef8',Paper:'#ede8f5'};
+const FM = {daily:30,weekly:4,monthly:1,once:1};
+
+// fallback data สำหรับเมื่อ API ยังไม่มีข้อมูล
+let users = [
+  {id:1,company:'โรงคั่วกาแฟ Arabica ดอยช้าง',biz:'Coffee Shop',lat:13.7563,lng:100.5018,co2:0},
+  {id:2,company:'ฟาร์มไส้เดือนสวนเกษตร',biz:'Farm',lat:13.8100,lng:100.5500,co2:0},
+  {id:3,company:'โรงงานผลไม้สยามฟู้ด',biz:'Factory',lat:13.7300,lng:100.6200,co2:0},
+  {id:4,company:'ร้าน MK สาขาลาดพร้าว',biz:'Restaurant',lat:13.8020,lng:100.5700,co2:0},
+  {id:5,company:'โรงงาน XYZ Packaging บางนา',biz:'Factory',lat:13.6500,lng:100.6800,co2:0},
+  {id:6,company:'ฟาร์มปุ๋ยชีวภาพสมุทรปราการ',biz:'Farm',lat:13.5980,lng:100.5940,co2:0},
+];
+let wastes = [
+  {id:101,gen:1,title:'กากกาแฟสด',cat:'Organic',kg:120,freq:'weekly',status:'available',desc:'กากกาแฟจากต้ม ไม่มีสารเคมี เหมาะทำปุ๋ยหมักหรือขัดผิว'},
+  {id:102,gen:3,title:'เปลือกส้มและผลไม้รวม',cat:'Organic',kg:340,freq:'daily',status:'available',desc:'เปลือกจากแปรรูปน้ำผลไม้ มีปริมาณสูง'},
+  {id:103,gen:5,title:'พาเลทไม้เก่า',cat:'Wood',kg:200,freq:'monthly',status:'available',desc:'พาเลทไม้ยังแข็งแรง เหมาะทำเฟอร์นิเจอร์หรือปลูกต้นไม้'},
+  {id:104,gen:4,title:'น้ำมันทอดซ้ำ',cat:'Oil',kg:80,freq:'weekly',status:'available',desc:'น้ำมันปาล์มทอดซ้ำ เหมาะทำ Biodiesel หรือสบู่'},
+  {id:105,gen:1,title:'กระดาษบรรจุภัณฑ์',cat:'Paper',kg:60,freq:'weekly',status:'available',desc:'กระดาษลูกฟูกจากกล่องกาแฟ'},
+  {id:106,gen:3,title:'กากมะพร้าวแห้ง',cat:'Organic',kg:90,freq:'weekly',status:'available',desc:'กากมะพร้าวหลังสกัดน้ำมัน เหมาะทำดินปลูก'},
+  {id:107,gen:1,title:'น้ำซุปเก่าร้านอาหาร',cat:'Organic',kg:150,freq:'daily',status:'available',desc:'น้ำซุปไก่/หมู ใช้ทำปุ๋ยหมัก'},
+  {id:108,gen:3,title:'กากน้ำตาล Molasses',cat:'Organic',kg:500,freq:'monthly',status:'available',desc:'กากน้ำตาลจากการผลิต'},
+  {id:109,gen:5,title:'ต้นผักเหลือทิ้ง',cat:'Organic',kg:200,freq:'weekly',status:'available',desc:'ต้นผักอินทรีย์ เหมาะทำปุ๋ยหมัก'},
+  {id:110,gen:4,title:'กากมอลต์จากเบียร์',cat:'Organic',kg:300,freq:'weekly',status:'available',desc:'กากมอลต์โปรตีนสูง'},
+  {id:111,gen:5,title:'ฟิล์มพลาสติก PE',cat:'Plastic',kg:80,freq:'monthly',status:'available',desc:'ฟิล์มพลาสติกรีไซเคิลได้'},
+  {id:112,gen:3,title:'กล่องกระดาษลูกฟูก',cat:'Paper',kg:400,freq:'weekly',status:'available',desc:'กล่องกระดาษสะอาด'},
+  {id:113,gen:5,title:'เศษไม้จากโรงงาน',cat:'Wood',kg:600,freq:'monthly',status:'available',desc:'เศษไม้เหมาะทำเชื้อเพลิงชีวมวล'},
+  {id:114,gen:4,title:'น้ำมันหมูจากร้านอาหาร',cat:'Oil',kg:45,freq:'weekly',status:'available',desc:'น้ำมันหมูใช้แล้ว เหมาะทำ Biodiesel'},
+  {id:115,gen:1,title:'เศษอาหารจากครัว',cat:'Organic',kg:80,freq:'daily',status:'available',desc:'เศษผักผลไม้ เหมาะทำปุ๋ยหมัก'},
+  {id:116,gen:3,title:'ดินจากแปลงผัก',cat:'Organic',kg:1000,freq:'monthly',status:'available',desc:'ดินอินทรีย์ มีธาตุอาหารสูง'},
+  {id:117,gen:2,title:'ปุ๋ยมูลไส้เดือน',cat:'Organic',kg:200,freq:'monthly',status:'available',desc:'ปุ๋ยคุณภาพสูง'},
+  {id:118,gen:3,title:'กล่องพลาสติก PP',cat:'Plastic',kg:60,freq:'monthly',status:'available',desc:'พลาสติก PP รีไซเคิลได้'},
+  {id:119,gen:1,title:'ถุงกระดาษกาแฟ',cat:'Paper',kg:30,freq:'weekly',status:'available',desc:'เหมาะทำกระดาษรีไซเคิล'},
+  {id:120,gen:4,title:'ขวดแก้วร้านอาหาร',cat:'Plastic',kg:120,freq:'weekly',status:'available',desc:'ขวดแก้วสะอาด นำกลับมาใช้ใหม่'},
+];
+let matches = [];
+let nextId = 200;
+let curFilter = 'all';
+let curSearch = '';
+let apiToken = null;
+
+// ═══════════════════════════════════════════════
+// HTTP HELPERS
+// ═══════════════════════════════════════════════
+async function apiFetch(path, options={}) {
+  const headers = {'Content-Type':'application/json'};
+  if(apiToken) headers['Authorization'] = 'Bearer ' + apiToken;
+  try {
+    const res = await fetch(API_BASE + path, {...options, headers});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch(e) {
+    console.warn('API error:', path, e.message);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// AUTH — auto register/login demo user
+// ═══════════════════════════════════════════════
+window.initAuth=async function() {
+  const login = await apiFetch('/api/auth/login', {
+    method:'POST',
+    body: JSON.stringify({email:'demo@circmatch.com', password:'demo1234'})
+  });
+  if(login && login.token) {
+    apiToken = login.token;
+    return;
+  }
+  const reg = await apiFetch('/api/auth/register', {
+    method:'POST',
+    body: JSON.stringify({
+      email:'demo@circmatch.com', password:'demo1234',
+      company:'โรงคั่วกาแฟ Arabica ดอยช้าง', businessType:'Coffee Shop',
+      lat:13.7563, lng:100.5018
+    })
+  });
+  if(reg && reg.token) {
+    apiToken = reg.token;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// HAVERSINE FORMULA
+// ═══════════════════════════════════════════════
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return parseFloat((R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))).toFixed(2));
+}
+
+// ═══════════════════════════════════════════════
+// CARBON SAVING LOGIC
+// ═══════════════════════════════════════════════
+function calcCO2(cat,kg,dist,freq){
+  const landfill=kg*(EF[cat]||0.3)*(FM[freq]||1);
+  const transport=dist*0.07*(FM[freq]||1);
+  return parseFloat(Math.max(0,landfill-transport).toFixed(2));
+}
+function calcScore(dist,kg){
+  return Math.round((Math.max(0,1-dist/50)*0.4+Math.min(1,kg/500)*0.3+0.3)*100);
+}
+
+// ═══════════════════════════════════════════════
+// API LAYER — ต่อ Railway จริง + fallback
+// ═══════════════════════════════════════════════
+async function apiGetWastes(cat, search) {
+  let params = '?status=available';
+  if(cat && cat !== 'all') params += '&category=' + cat;
+  const data = await apiFetch('/api/wastes' + params);
+  if(data && data.results) {
+    const list = data.results.map(w => ({
+      id: w.id,
+      gen: w.generator_id,
+      title: w.title,
+      cat: w.category,
+      kg: w.weight_kg,
+      freq: w.frequency || 'weekly',
+      status: w.status,
+      desc: w.description || '',
+      genCompany: w.generator?.company || 'บริษัทไม่ระบุ',
+      lat: w.generator?.lat,
+      lng: w.generator?.lng,
+    }));
+    if(search) return list.filter(w => w.title.includes(search) || w.desc.includes(search));
+    return list;
+  }
+  return wastes.filter(w => {
+    if(w.status !== 'available') return false;
+    if(cat !== 'all' && w.cat !== cat) return false;
+    if(search && !w.title.includes(search) && !w.desc.includes(search)) return false;
+    return true;
+  });
+}
+
+async function apiRecommend(uid, radius=50) {
+  const data = await apiFetch(`/api/match/recommendations?user_id=${uid}&radius_km=${radius}`);
+  if(data && data.results) {
+    return data.results.map(r => ({
+      id: r.waste_id,
+      title: r.title,
+      cat: r.category,
+      kg: r.weight_kg,
+      freq: r.frequency || 'weekly',
+      genName: r.generator_company || 'ไม่ระบุ',
+      dist: r.distance_km,
+      score: r.match_score,
+      co2: r.carbon_saved_kg,
+    }));
+  }
+  const rec = users.find(u => u.id === uid);
+  if(!rec) return [];
+  return wastes.filter(w => w.status === 'available').map(w => {
+    const gen = users.find(u => u.id === w.gen);
+    const dist = haversine(rec.lat, rec.lng, gen.lat, gen.lng);
+    return {...w, genName:gen.company, dist, score:calcScore(dist,w.kg), co2:calcCO2(w.cat,w.kg,dist,w.freq)};
+  }).filter(x => x.dist <= radius).sort((a,b) => b.score - a.score);
+}
+
+async function apiMatchReal(wasteId, recId) {
+  const data = await apiFetch('/api/matches', {
+    method: 'POST',
+    body: JSON.stringify({waste_id: wasteId, receiver_id: recId})
+  });
+  if(data && data.match_id) {
+    return {
+      id: data.match_id,
+      dist: data.distance_km,
+      co2: data.carbon_saved_kg,
+      status: data.status,
+    };
+  }
+  return null;
+}
+
+function apiMatchLocal(wasteId, recId) {
+  const w = wastes.find(x => x.id === wasteId);
+  if(!w || w.status !== 'available') return null;
+  const gen = users.find(u => u.id === w.gen), rec = users.find(u => u.id === recId);
+  const dist = haversine(rec.lat, rec.lng, gen.lat, gen.lng);
+  const co2 = calcCO2(w.cat, w.kg, dist, w.freq);
+  const m = {id:matches.length+1, wasteId, genId:w.gen, recId, dist, co2,
+    title:w.title, cat:w.cat, kg:w.kg, genName:gen.company, recName:rec.company,
+    status:'completed', time:new Date().toLocaleString('th-TH')};
+  matches.push(m); w.status = 'matched';
+  return m;
+}
+
+async function apiStats(uid) {
+  const data = await apiFetch(`/api/dashboard/stats?user_id=${uid}`);
+  if(data && data.matches_count !== undefined) {
+    const byCat = data.by_category || {};
+    const matchList = (data.recent_matches || []).map(m => ({
+      id: m.id, wasteId: m.waste_id, genId: m.generator_id, recId: m.receiver_id,
+      dist: m.distance_km, co2: m.carbon_saved_kg,
+      title: m.waste_title || 'วัสดุ', cat: m.category || 'Organic',
+      kg: m.weight_kg || 0, genName: m.generator_company || 'ต้นทาง',
+      recName: m.receiver_company || 'ปลายทาง',
+      status: 'completed', time: m.created_at ? new Date(m.created_at).toLocaleString('th-TH') : '—'
+    }));
+    return {
+      kg: data.total_waste_recycled_kg || 0,
+      co2: parseFloat((data.total_carbon_saved_kg || 0).toFixed(2)),
+      count: data.matches_count || 0,
+      thb: data.saved_thb || 0,
+      byCat, matches: matchList
+    };
+  }
+  const my = matches.filter(m => m.genId === uid || m.recId === uid);
+  const co2 = my.reduce((s,m) => s + m.co2, 0);
+  const kg = my.reduce((s,m) => s + m.kg, 0);
+  const byCat = {};
+  my.forEach(m => { byCat[m.cat] = (byCat[m.cat]||0) + m.co2 });
+  return {kg, co2:parseFloat(co2.toFixed(2)), count:my.length, thb:kg*20, byCat, matches:my};
+}
+
+// ═══════════════════════════════════════════════
+// RENDER FEED
+// ═══════════════════════════════════════════════
+window.renderFeed=async function(){
+  const g=document.getElementById('wasteGrid');
+  g.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">⏳</div>กำลังโหลดจาก API...</div>';
+  const list = await apiGetWastes(curFilter, curSearch);
+  const stats = await apiStats(CURRENT_USER_ID);
+  document.getElementById('heroListings').textContent=list.filter(w=>w.status==='available').length||list.length;
+  document.getElementById('heroMatches').textContent=stats.count;
+  document.getElementById('heroCO2').textContent=stats.co2;
+  document.getElementById('matchCountBadge').textContent=stats.count+' matches';
+  if(!list.length){g.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div>ไม่พบวัสดุที่ตรงกัน</div>';return}
+  g.innerHTML=list.map(w=>{
+    const genName = w.genCompany || (users.find(u=>u.id===w.gen)||{company:'ไม่ระบุ'}).company;
+    const co2Est=parseFloat((w.kg*(EF[w.cat]||0.3)*(FM[w.freq]||1)).toFixed(1));
+    return`<div class="waste-card" onclick="window.openModal(${w.id})">
+      <div class="waste-card-header">
+        <div class="waste-icon-wrap" style="background:${BGS[w.cat]||'#f0f0f0'}">${ICONS[w.cat]||'📦'}</div>
+        <div><div class="waste-card-title">${w.title}</div><div class="waste-card-from">${genName}</div></div>
+      </div>
+      <div class="waste-status ${w.status==='available'?'s-available':'s-matched'}">${w.status==='available'?'ว่าง':'จับคู่แล้ว'}</div>
+      <div class="waste-card-body">
+        <div class="waste-specs">
+          <div class="spec-item"><div class="spec-label">น้ำหนัก</div><div class="spec-val">${w.kg} <span style="font-size:10px;color:var(--ink3)">กก.</span></div></div>
+          <div class="spec-item"><div class="spec-label">ความถี่</div><div class="spec-val" style="font-size:11px">${{daily:'ทุกวัน',weekly:'ต่อสัปดาห์',monthly:'ต่อเดือน',once:'ครั้งเดียว'}[w.freq]||w.freq}</div></div>
+        </div>
+        <div class="waste-co2-preview">🌿 <div>ลด CO₂ ประมาณ</div><div class="co2-preview-val">${co2Est} kgCO₂e</div></div>
+      </div>
+      <div class="waste-card-footer">
+        <div class="dist-badge">📍 ${genName.substring(0,14)}…</div>
+        <button class="btn-match" ${w.status!=='available'?'disabled':''} onclick="event.stopPropagation();openModal(${w.id})">${w.status==='available'?'🔗 Match':'✓ Done'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.filterCat=function(c,el){curFilter=c;document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active'));el.classList.add('active');renderFeed()}
+window.filterWastes=function(v){curSearch=v;renderFeed()}
+
+// ═══════════════════════════════════════════════
+// MATCH MODAL
+// ═══════════════════════════════════════════════
+let curWasteId=null;
+let curWasteData=null;
+window.openModal=async function(wId){
+  const allWastes = await apiGetWastes('all','');
+  let w = allWastes.find(x=>x.id===wId);
+  if(!w) w = wastes.find(x=>x.id===wId);
+  if(!w) return;
+  curWasteId=wId;
+  curWasteData=w;
+
+  const recs = await apiRecommend(CURRENT_USER_ID, 100);
+  const best = recs.find(r=>r.id===wId) || {dist:8.5, score:72, co2:calcCO2(w.cat,w.kg,8.5,w.freq)};
+  const genName = w.genCompany || (users.find(u=>u.id===w.gen)||{company:'บริษัทต้นทาง'}).company;
+
+  document.getElementById('modalTitle').textContent=`🔗 Smart Match — ${w.title}`;
+  document.getElementById('modalBody').innerHTML=`
+    <div class="algo-section-title">⚙️ Algorithm — GET /api/match/recommendations?user_id=${CURRENT_USER_ID}</div>
+    <div class="algo-steps">
+      <div class="algo-step" id="as1"><div class="step-num" id="sn1">1</div>
+        <div class="step-text"><strong>Haversine Distance Calculation</strong>
+          <span class="step-code">dist = haversine(lat1, lng1, lat2, lng2) → Railway API</span></div></div>
+      <div class="algo-step" id="as2"><div class="step-num" id="sn2">2</div>
+        <div class="step-text"><strong>Result: ${best.dist} กม.</strong> — ${best.dist<=50?'✅ อยู่ในรัศมี 50 กม.':'⚠️ ระยะไกล แต่คุ้มค่า'}
+          <span class="step-code">if dist_km &lt;= radius_km: candidates.append(waste)</span></div></div>
+      <div class="algo-step" id="as3"><div class="step-num" id="sn3">3</div>
+        <div class="step-text"><strong>Match Score: ${best.score}/100</strong>
+          <span class="step-code">score = 0.4×dist_score + 0.3×qty_score + 0.3×freq_bonus</span></div></div>
+      <div class="algo-step" id="as4"><div class="step-num" id="sn4">4</div>
+        <div class="step-text"><strong>Carbon Saving Estimate</strong>
+          <span class="step-code">co2 = ${w.kg} × ${EF[w.cat]||0.3} × ${FM[w.freq]||1} − ${best.dist} × 0.07 × ${FM[w.freq]||1}</span></div></div>
+    </div>
+    <div class="result-card" id="rCard" style="opacity:0;transition:opacity .4s">
+      <div class="result-row"><span class="k">🏭 ต้นทาง</span><span class="v">${genName}</span></div>
+      <div class="result-row"><span class="k">🌾 ปลายทาง</span><span class="v">ฟาร์มไส้เดือนสวนเกษตร</span></div>
+      <div class="result-row"><span class="k">📍 ระยะทาง</span><span class="v amber">${best.dist} กม.</span></div>
+      <div class="result-row"><span class="k">⚖️ ปริมาณ</span><span class="v">${w.kg} กก. / ${w.freq}</span></div>
+      <div class="result-row"><span class="k">🎯 Match Score</span><span class="v green">${best.score} / 100</span></div>
+      <div class="result-row"><span class="k">🌿 CO₂ ลดได้</span><span class="v green">${best.co2} kgCO₂e</span></div>
+      <div class="result-row"><span class="k">💰 ประหยัดค่ากำจัด</span><span class="v amber">฿${Math.round(w.kg*2*(FM[w.freq]||1))}/รอบ</span></div>
+    </div>
+    <button class="match-confirm-btn" id="confirmBtn" style="opacity:0;transition:opacity .4s" onclick="window.doMatch()">
+      🤝 ยืนยันการจับคู่ — POST /api/matches
+    </button>`;
+
+  document.getElementById('matchModal').classList.add('open');
+  [200,550,900,1250].forEach((d,i)=>{
+    setTimeout(()=>{
+      document.getElementById('as'+(i+1))?.classList.add('reveal');
+      if(i>0) document.getElementById('sn'+i).classList.add('done');
+      if(i===3){
+        document.getElementById('sn4').classList.add('done');
+        setTimeout(()=>{
+          document.getElementById('rCard').style.opacity='1';
+          document.getElementById('confirmBtn').style.opacity='1';
+        },300);
+      }
+    },d);
+  });
+}
+
+window.doMatch=async function(){
+  const btn=document.getElementById('confirmBtn');
+  btn.disabled=true; btn.textContent='⏳ กำลังส่งไปยัง Railway API...';
+  const result = await apiMatchReal(curWasteId, CURRENT_USER_ID);
+  if(result) {
+    btn.textContent='✅ จับคู่สำเร็จ! CO₂ Saved: '+result.co2+' kgCO₂e';
+    btn.classList.add('confirmed');
+    toast('🎉 จับคู่สำเร็จ (Railway API) ลด CO₂ ได้ '+result.co2+' kgCO₂e');
+  } else {
+    const m = apiMatchLocal(curWasteId, 2);
+    if(m){
+      btn.textContent='✅ จับคู่สำเร็จ! CO₂ Saved: '+m.co2+' kgCO₂e';
+      btn.classList.add('confirmed');
+      toast('🎉 จับคู่สำเร็จ! ลด CO₂ ได้ '+m.co2+' kgCO₂e');
+    }
+  }
+  renderFeed(); renderDash(); renderESG();
+  setTimeout(closeModalDirect,1600);
+}
+
+window.closeModal=function(e){if(e.target===document.getElementById('matchModal'))closeModalDirect()}
+window.closeModalDirect=function(){document.getElementById('matchModal').classList.remove('open')}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+window.renderDash=async function(){
+  const s = await apiStats(CURRENT_USER_ID);
+  document.getElementById('d_recycled').textContent=s.kg+' กก.';
+  document.getElementById('d_carbon').textContent=s.co2;
+  document.getElementById('d_matches').textContent=s.count+' ครั้ง';
+  document.getElementById('d_matches_d').textContent=s.count>0?'ล่าสุด: '+s.matches[s.matches.length-1].time:'—';
+  document.getElementById('d_thb').textContent='฿'+s.thb.toLocaleString();
+  const log=document.getElementById('matchLog');
+  if(!s.matches.length){log.innerHTML='<div class="empty-state"><div class="empty-icon">🔗</div>ยังไม่มีการจับคู่</div>';
+  } else {
+    log.innerHTML=s.matches.slice().reverse().map(m=>`
+      <div class="match-log-item">
+        <div class="log-icon" style="background:${BGS[m.cat]||'#f0f0f0'}">${ICONS[m.cat]||'📦'}</div>
+        <div class="log-content"><div class="log-title">${m.title} · ${m.kg} กก.</div>
+          <div class="log-meta">${m.genName} → ${m.recName} · 📍${m.dist} กม. · ${m.time}</div></div>
+        <div class="log-co2">-${m.co2} kgCO₂e</div>
+      </div>`).join('');
+  }
+  const bars=document.getElementById('carbonBars');
+  const maxV=Math.max(...Object.keys(EF).map(c=>s.byCat[c]||0),1);
+  bars.innerHTML=Object.keys(EF).map(cat=>{
+    const v=s.byCat[cat]||0, pct=Math.round(v/maxV*100);
+    return`<div class="carbon-bar-item">
+      <div class="carbon-bar-head"><span class="carbon-bar-label">${ICONS[cat]} ${cat}</span><span class="carbon-bar-val">${v.toFixed(1)} kg</span></div>
+      <div class="carbon-track"><div class="carbon-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// ESG RENDER
+// ═══════════════════════════════════════════════
+window.renderESG=async function(){
+  const s = await apiStats(CURRENT_USER_ID);
+  document.getElementById('rm_co2').textContent=s.co2+' kg';
+  document.getElementById('rm_waste').textContent=s.kg+' kg';
+  document.getElementById('rm_matches').textContent=s.count;
+  const credit=parseFloat((s.co2*5).toFixed(2));
+  document.getElementById('ec_co2').textContent=s.co2+' kgCO₂e';
+  document.getElementById('ec_val').textContent='฿'+credit.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════
+// API DOCS
+// ═══════════════════════════════════════════════
+window.renderAPIDocs=function(){
+  const eps=[
+    {m:'GET',p:'/api/wastes?category=Organic',d:'ดึงรายการวัสดุที่ยัง available',
+     r:'{\n  "count": 4,\n  "results": [\n    { "id": 101, "title": "กากกาแฟสด", "category": "Organic", "weight_kg": 120, "status": "available" }\n  ]\n}'},
+    {m:'POST',p:'/api/wastes',d:'สร้างโพสต์วัสดุใหม่',
+     b:'{ "generator_id": 1, "title": "กากกาแฟ 50 กก.", "category": "Organic", "weight_kg": 50, "freq": "weekly" }',
+     r:'{ "id": 107, "status": "available", "created_at": "2025-01-15T08:30:00Z" }'},
+    {m:'GET',p:'/api/match/recommendations?user_id=2&radius_km=50',d:'🎯 Smart Matching — Haversine + Score Algorithm จัดอันดับจากดีสุด',
+     r:'{\n  "receiver": "ฟาร์มไส้เดือนสวนเกษตร",\n  "radius_km": 50,\n  "total_found": 4,\n  "results": [\n    { "waste_id": 101, "title": "กากกาแฟสด", "distance_km": 8.23, "match_score": 87, "carbon_saved_kg": 15.36 }\n  ]\n}'},
+    {m:'POST',p:'/api/matches',d:'ยืนยันการจับคู่ — คำนวณ Carbon Saving อัตโนมัติ, อัปเดต Status',
+     b:'{ "waste_id": 101, "receiver_id": 2 }',
+     r:'{ "match_id": 1, "distance_km": 8.23, "carbon_saved_kg": 15.36, "status": "completed" }'},
+    {m:'GET',p:'/api/dashboard/stats?user_id=1',d:'📊 สรุป ESG Stats สำหรับ Dashboard และ Report',
+     r:'{\n  "total_waste_recycled_kg": 500,\n  "total_carbon_saved_kg": 125.5,\n  "matches_count": 10,\n  "saved_thb": 10000,\n  "by_category": { "Organic": 45.2, "Wood": 80.3 }\n}'},
+  ];
+  const MC={GET:'#1a6a5a',POST:'#2d6a1f'};
+  document.getElementById('apiDocs').innerHTML=eps.map(e=>`
+    <div class="api-endpoint">
+      <div><span class="api-method" style="background:${MC[e.m]}">${e.m}</span><span class="api-path">${e.p}</span></div>
+      <div class="api-desc">${e.d}</div>
+      ${e.b?`<div class="code-block-label">Request Body</div><pre class="code-block" style="color:var(--teal3);margin-bottom:10px">${e.b}</pre>`:''}
+      <div class="code-block-label">Response</div>
+      <pre class="code-block">${e.r}</pre>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// POST FORM
+// ═══════════════════════════════════════════════
+window.updateCO2Preview=function(){
+  const kg=parseFloat(document.getElementById('f_weight').value)||0;
+  const cat=document.getElementById('f_cat').value;
+  const freq=document.getElementById('f_freq').value;
+  if(kg>0){
+    const co2=calcCO2(cat,kg,10,freq);
+    document.getElementById('co2Preview').innerHTML=
+      `🌿 ลด CO₂ ได้ประมาณ <strong style="color:var(--leaf)">${co2} kgCO₂e</strong>/รอบ (EF=${EF[cat]}, สมมติระยะ 10 กม.)`;
+  }
+}
+window.submitPost=async function(){
+  const co=document.getElementById('f_company').value.trim();
+  const ti=document.getElementById('f_title').value.trim();
+  const kg=parseFloat(document.getElementById('f_weight').value);
+  if(!co||!ti||!kg){toast('⚠️ กรุณากรอกข้อมูลที่จำเป็น');return}
+  const body={
+    title: ti,
+    category: document.getElementById('f_cat').value,
+    weight_kg: kg,
+    frequency: document.getElementById('f_freq').value,
+    description: document.getElementById('f_desc').value||'ไม่มีรายละเอียด',
+    lat: parseFloat(document.getElementById('f_lat').value)||13.75+Math.random()*.2,
+    lng: parseFloat(document.getElementById('f_lng').value)||100.5+Math.random()*.2,
+  };
+  const result = await apiFetch('/api/wastes', {method:'POST', body:JSON.stringify(body)});
+  if(result && result.id) {
+    toast('✅ โพสต์สำเร็จ (Railway API)! ID: '+result.id);
+  } else {
+    const u={id:users.length+1,company:co,biz:document.getElementById('f_biz').value,
+      lat:body.lat, lng:body.lng, co2:0};
+    users.push(u);
+    wastes.push({id:nextId++,gen:u.id,title:ti,cat:body.category,
+      kg,freq:body.frequency,status:'available',desc:body.description});
+    toast('✅ โพสต์สำเร็จ (local)! ระบบกำลังหาผู้รับ...');
+  }
+  ['f_company','f_title','f_weight','f_lat','f_lng','f_desc'].forEach(id=>document.getElementById(id).value='');
+  setTimeout(()=>showPage('feed'),1400);
+}
+
+// ═══════════════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════════════
+window.showPage=function(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach((l,i)=>{
+    l.classList.toggle('active',['feed','post','dashboard','esg','api'][i]===n);
+  });
+  if(n==='feed') renderFeed();
+  if(n==='dashboard') renderDash();
+  if(n==='esg') renderESG();
+  if(n==='api') renderAPIDocs();
+  window.scrollTo(0,0);
+}
+window.toast=function(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+let currentUser = null;
+try {
+  const s = JSON.parse(localStorage.getItem('cm_session') || 'null');
+  if (s && s.token) { apiToken = s.token; currentUser = s.user; }
+} catch(e) {}
+
+window.openAuthModal = function(tab) {
+  document.getElementById('authModal').style.display = 'flex';
+  window.switchAuthTab(tab || 'login');
+}
+window.closeAuthModal = function() {
+  document.getElementById('authModal').style.display = 'none';
+}
+window.switchAuthTab = function(t) {
+  document.getElementById('loginPanel').style.display = t==='login' ? 'block' : 'none';
+  document.getElementById('regPanel').style.display = t==='register' ? 'block' : 'none';
+  const tl = document.getElementById('tabLogin');
+  const tr = document.getElementById('tabReg');
+  if(tl){ tl.style.color=t==='login'?'#2d6a1f':'#5a6a50'; tl.style.borderBottomColor=t==='login'?'#2d6a1f':'transparent'; }
+  if(tr){ tr.style.color=t==='register'?'#2d6a1f':'#5a6a50'; tr.style.borderBottomColor=t==='register'?'#2d6a1f':'transparent'; }
+  const msg=document.getElementById('authMsg'); if(msg) msg.style.display='none';
+}
+function showAuthMsg(msg, ok) {
+  const el = document.getElementById('authMsg');
+  if(!el) return;
+  el.textContent = msg; el.style.display = 'block';
+  el.style.background = ok ? '#e8f5e0' : '#fff0f0';
+  el.style.border = 'none'; el.style.padding = '9px 12px';
+  el.style.borderRadius = '6px'; el.style.fontSize = '13px';
+  el.style.marginBottom = '12px'; el.style.color = ok ? '#2d6a1f' : '#c04040';
+}
+window.doLogin = async function() {
+  const email = document.getElementById('liEmail').value.trim();
+  const pass = document.getElementById('liPass').value;
+  if (!email || !pass) { showAuthMsg('กรุณากรอก email และ password'); return; }
+  const data = await apiFetch('/api/auth/login', {method:'POST', body:JSON.stringify({email, password:pass})});
+  if (data && data.token) {
+    apiToken = data.token; currentUser = data.user;
+    localStorage.setItem('cm_session', JSON.stringify({token:apiToken, user:currentUser}));
+    updateNavUser(); window.closeAuthModal();
+    window.toast('👋 ยินดีต้อนรับ ' + (currentUser.company||currentUser.email) + '!');
+    renderFeed();
+  } else { showAuthMsg(data?.message || 'เข้าสู่ระบบไม่สำเร็จ'); }
+}
+window.doRegister = async function() {
+  const email = document.getElementById('reEmail').value.trim();
+  const pass = document.getElementById('rePass').value;
+  const company = document.getElementById('reCompany').value.trim();
+  const biz = document.getElementById('reBiz').value;
+  if (!email || !pass || !company) { showAuthMsg('กรุณากรอกข้อมูลที่จำเป็น'); return; }
+  if (pass.length < 8) { showAuthMsg('Password ต้องมีอย่างน้อย 8 ตัวอักษร'); return; }
+  const data = await apiFetch('/api/auth/register', {method:'POST', body:JSON.stringify({email, password:pass, company, businessType:biz, lat:13.7563, lng:100.5018})});
+  if (data && data.token) {
+    apiToken = data.token; currentUser = data.user;
+    localStorage.setItem('cm_session', JSON.stringify({token:apiToken, user:currentUser}));
+    showAuthMsg('✅ สมัครสำเร็จ! ตรวจสอบ Email ของคุณ', true);
+    setTimeout(() => { updateNavUser(); window.closeAuthModal(); window.toast('🎉 ยินดีต้อนรับ! ดู Email ของคุณ'); renderFeed(); }, 1500);
+  } else { showAuthMsg(data?.message || 'สมัครสมาชิกไม่สำเร็จ'); }
+}
+window.doLogout = function() {
+  apiToken = null; currentUser = null;
+  localStorage.removeItem('cm_session');
+  updateNavUser(); window.toast('👋 ออกจากระบบแล้ว'); renderFeed();
+}
+function updateNavUser() {
+  const nu = document.getElementById('navUser');
+  const nb = document.getElementById('navLoginBtn');
+  if (currentUser) {
+    nu.style.display = 'flex'; nb.style.display = 'none';
+    document.getElementById('navUserName').textContent = currentUser.company || currentUser.email;
+  } else {
+    nu.style.display = 'none'; nb.style.display = 'block';
+  }
+}
+updateNavUser();
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.init=async function() {
+  toast('🔗 กำลังเชื่อมต่อ Railway API...');
+  await initAuth();
+  renderFeed();
+}
+window.init();
+</script>
+
+<div id="authModal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(13,18,8,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:18px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.3)">
+    <div style="background:#0d1208;padding:22px 28px 16px">
+      <div style="font-family:Fraunces,serif;font-size:20px;font-weight:900;color:#fff">Circular<span style="color:#b5d96a">Match</span></div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4)">Tinder for Waste · เศรษฐกิจหมุนเวียน</div>
+    </div>
+    <div style="display:flex;border-bottom:1px solid #e4dfd2">
+      <div id="tabLogin" onclick="window.switchAuthTab('login')" style="flex:1;padding:13px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;color:#2d6a1f;border-bottom:3px solid #2d6a1f">เข้าสู่ระบบ</div>
+      <div id="tabReg" onclick="window.switchAuthTab('register')" style="flex:1;padding:13px;text-align:center;font-size:13px;font-weight:700;cursor:pointer;color:#5a6a50;border-bottom:3px solid transparent">สมัครสมาชิก</div>
+    </div>
+    <div style="padding:20px 24px 24px">
+      <div id="authMsg" style="display:none;padding:9px 12px;border-radius:6px;font-size:13px;margin-bottom:12px"></div>
+      <div id="loginPanel">
+        <div style="margin-bottom:12px">
+          <label style="font-size:11px;font-weight:700;color:#5a6a50;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px">Email</label>
+          <input id="liEmail" type="email" placeholder="your@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #d0cab8;border-radius:7px;font-family:Sarabun;font-size:14px;outline:none;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:#5a6a50;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px">Password</label>
+          <input id="liPass" type="password" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1.5px solid #d0cab8;border-radius:7px;font-family:Sarabun;font-size:14px;outline:none;box-sizing:border-box">
+        </div>
+        <button onclick="window.doLogin()" style="width:100%;padding:12px;background:#2d6a1f;color:#fff;border:none;border-radius:8px;font-family:Fraunces,serif;font-size:16px;font-weight:700;cursor:pointer">🔑 เข้าสู่ระบบ</button>
+      </div>
+      <div id="regPanel" style="display:none">
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;font-weight:700;color:#5a6a50;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px">Email</label>
+          <input id="reEmail" type="email" placeholder="your@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #d0cab8;border-radius:7px;font-family:Sarabun;font-size:14px;outline:none;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;font-weight:700;color:#5a6a50;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px">Password (8+ ตัว)</label>
+          <input id="rePass" type="password" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1.5px solid #d0cab8;border-radius:7px;font-family:Sarabun;font-size:14px;outline:none;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:11px;font-weight:700;color:#5a6a50;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px">ชื่อบริษัท / ร้าน</label>
+          <input id="reCompany" placeholder="เช่น Café Amazon สาขาสีลม" style="width:100%;padding:10px 12px;border:1.5px solid #d0cab8;border-radius:7px;font-family:Sarabun;font-size:14px;outline:none;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:14px">
+          <label style="font-size:11px;font-weight:700;color:#5a6a50;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:4px">ประเภทธุรกิจ</label>
+          <select id="reBiz" style="width:100%;padding:10px 12px;border:1.5px solid #d0cab8;border-radius:7px;font-family:Sarabun;font-size:14px;outline:none;box-sizing:border-box">
+            <option>Coffee Shop</option><option>Restaurant</option><option>Factory</option><option>Farm</option><option>Supermarket</option>
+          </select>
+        </div>
+        <button onclick="window.doRegister()" style="width:100%;padding:12px;background:#2d6a1f;color:#fff;border:none;border-radius:8px;font-family:Fraunces,serif;font-size:16px;font-weight:700;cursor:pointer">🌿 สมัครสมาชิก</button>
+        <p style="font-size:11px;color:#5a6a50;text-align:center;margin-top:8px">จะได้รับ Welcome Email หลังสมัคร</p>
+      </div>
+      <button onclick="window.closeAuthModal()" style="width:100%;margin-top:10px;padding:8px;background:none;border:1.5px solid #d0cab8;border-radius:7px;font-family:Sarabun;font-size:13px;color:#5a6a50;cursor:pointer">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

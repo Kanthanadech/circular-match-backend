@@ -12,6 +12,7 @@ const auth_routes_1 = require("./routes/auth.routes");
 const waste_routes_1 = require("./routes/waste.routes");
 const match_routes_1 = require("./routes/match.routes");
 const report_routes_1 = require("./routes/report.routes");
+const export_routes_1 = __importDefault(require("./routes/export.routes"));
 const prisma_1 = require("./utils/prisma");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT ?? 3000;
@@ -51,6 +52,7 @@ app.get("/health", async (_req, res) => {
 app.use("/api/auth", auth_routes_1.authRouter);
 app.use("/api/wastes", waste_routes_1.wasteRouter);
 app.use("/api/matches", match_routes_1.matchRouter);
+app.use("/api/export", export_routes_1.default);
 app.use("/api/reports", report_routes_1.reportRouter);
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

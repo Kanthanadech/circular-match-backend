@@ -8,6 +8,7 @@ import { authRouter } from "./routes/auth.routes";
 import { wasteRouter } from "./routes/waste.routes";
 import { matchRouter } from "./routes/match.routes";
 import { reportRouter } from "./routes/report.routes";
+import exportRouter from "./routes/export.routes";
 import { prisma } from "./utils/prisma";
 
 const app = express();
@@ -52,6 +53,7 @@ app.get("/health", async (_req: Request, res: Response) => {
 app.use("/api/auth",    authRouter);
 app.use("/api/wastes",  wasteRouter);
 app.use("/api/matches", matchRouter);
+app.use("/api/export",  exportRouter);
 app.use("/api/reports", reportRouter);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
