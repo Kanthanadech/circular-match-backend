@@ -33,9 +33,8 @@ async function register(req, res) {
         const user = await prisma.user.create({
             data: {
                 email,
-                password: hashed,
+                passwordHash: hashed,
                 companyName: company,
-                businessType: businessType || "Other",
                 lat: lat || 13.7563,
                 lng: lng || 100.5018,
                 role: "GENERATOR",
@@ -96,7 +95,7 @@ async function login(req, res) {
             res.status(401).json({ success: false, message: "ไม่พบบัญชีนี้" });
             return;
         }
-        const valid = await bcryptjs_1.default.compare(password, user.password);
+        const valid = await bcryptjs_1.default.compare(password, user.passwordHash);
         if (!valid) {
             res.status(401).json({ success: false, message: "รหัสผ่านไม่ถูกต้อง" });
             return;
