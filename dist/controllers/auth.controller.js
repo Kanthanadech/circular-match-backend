@@ -44,7 +44,7 @@ async function register(req, res) {
         try {
             await resend.emails.send({
                 from: `${APP_NAME} <${FROM_EMAIL}>`,
-                to: email,
+                to: "kanthanadech05@gmail.com",
                 subject: `🌿 ยินดีต้อนรับสู่ ${APP_NAME}!`,
                 html: `
           <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#f5f2ea;padding:32px;border-radius:12px">
