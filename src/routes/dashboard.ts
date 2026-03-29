@@ -12,7 +12,12 @@ router.get('/stats', async (req: Request, res: Response) => {
     }
 
     const matchRows = await prisma.match.findMany({
-      where: { receiverId: userId },
+  where: {
+    OR: [
+      { receiverId: userId },
+      { waste: { generatorId: userId } },
+    ],
+  },
       include: {
         waste: true,
         receiver: true,

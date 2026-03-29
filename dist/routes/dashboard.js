@@ -11,7 +11,12 @@ router.get('/stats', async (req, res) => {
             return res.status(400).json({ error: 'user_id required' });
         }
         const matchRows = await prisma_1.prisma.match.findMany({
-            where: { receiverId: userId },
+            where: {
+                OR: [
+                    { receiverId: userId },
+                    { waste: { generatorId: userId } },
+                ],
+            },
             include: {
                 waste: true,
                 receiver: true,
