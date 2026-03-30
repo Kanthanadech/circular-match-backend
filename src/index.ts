@@ -9,6 +9,7 @@ import { wasteRouter } from "./routes/waste.routes";
 import { matchRouter } from "./routes/match.routes";
 import { reportRouter } from "./routes/report.routes";
 import exportRouter from "./routes/export.routes";
+import { chatRouter } from "./routes/chat.routes";
 import { prisma } from "./utils/prisma";
 import dashboardRouter from './routes/dashboard';
 
@@ -49,12 +50,13 @@ app.get("/health", async (_req: Request, res: Response) => {
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
-app.use("/api/auth",    authRouter);
-app.use("/api/wastes",  wasteRouter);
-app.use("/api/matches", matchRouter);
-app.use("/api/export",  exportRouter);
-app.use("/api/reports", reportRouter);
-app.use('/api/dashboard', dashboardRouter);
+app.use("/api/auth",      authRouter);
+app.use("/api/wastes",    wasteRouter);
+app.use("/api/matches",   matchRouter);
+app.use("/api/export",    exportRouter);
+app.use("/api/reports",   reportRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/chat",      chatRouter);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((_req: Request, res: Response) => {
@@ -88,6 +90,7 @@ async function main() {
       console.log(`🗂   Wastes: GET/POST /api/wastes`);
       console.log(`🔗  Match:  GET /api/matches/recommendations`);
       console.log(`📄  Report: GET /api/reports/esg/download`);
+      console.log(`💬  Chat:   GET/POST /api/chat/:matchId`);
     });
   } catch (err) {
     console.error("❌  Failed to start server:", err);
