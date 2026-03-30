@@ -7,7 +7,7 @@ const chat_controller_1 = require("../controllers/chat.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 exports.chatRouter = (0, express_1.Router)();
 // ต้อง login ก่อนทุก route
-exports.chatRouter.use(auth_middleware_1.authenticate);
+exports.chatRouter.use(auth_middleware_1.authMiddleware);
 // GET  /api/chat/:matchId — ดึงข้อความทั้งหมดในการจับคู่นั้น
 exports.chatRouter.get("/:matchId", chat_controller_1.getMessages);
 // POST /api/chat/:matchId — ส่งข้อความใหม่
